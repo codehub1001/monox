@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   FaChartLine,
   FaBitcoin,
@@ -15,46 +16,51 @@ const tradingOptions = [
     description:
       "Copy the strategies of successful traders, track their performance, and watch your investments grow with minimal effort.",
     icon: <FaChartLine className="text-yellow-500 text-4xl" />,
+    link: "/copy-trading",
   },
   {
     title: "Crypto Trading",
     description:
       "Our crypto experts are at the forefront of this rapidly evolving market, helping you gain from the volatility and potential of digital assets.",
     icon: <FaBitcoin className="text-yellow-500 text-4xl" />,
+    link: "/crypto-trading",
   },
   {
     title: "Forex Trading",
     description:
       "Our top forex traders navigate currency pairs with precision, allowing you to capitalize on global currency fluctuations.",
     icon: <FaGlobe className="text-yellow-500 text-4xl" />,
+    link: "/forex-trading",
   },
   {
     title: "Indices Trading",
     description:
       "Invest in the broader market without the need for complex analysis. Follow our leading indices traders who specialize in maximizing returns from market indices.",
     icon: <FaChartBar className="text-yellow-500 text-4xl" />,
+    link: "/indices-trading",
   },
   {
     title: "Futures Trading",
     description:
       "Futures trading offers a dynamic way to engage with the financial markets and diversify your investment portfolio.",
     icon: <FaChartPie className="text-yellow-500 text-4xl" />,
+    link: "/futures-trading",
   },
   {
     title: "Stocks Trading",
     description:
       "Our stock trading experts consistently outperform the market, and with copy trading, you can share in their success.",
     icon: <FaChartLine className="text-yellow-500 text-4xl" />,
+    link: "/stocks-trading",
   },
 ];
 
 const TradingSection = () => {
   return (
     <section className="relative bg-[#faf7f1] text-gray-900 py-20 px-6 md:px-16 overflow-hidden">
-      {/* Gold overlay gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-yellow-100/40 to-transparent pointer-events-none"></div>
 
-      {/* Section Header */}
+      {/* Header */}
       <div className="text-center mb-14 relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: -20 }}
@@ -94,13 +100,14 @@ const TradingSection = () => {
             <h4 className="text-2xl font-bold text-yellow-600 mb-3">
               {option.title}
             </h4>
-            <p className="text-gray-600 leading-relaxed">
-              {option.description}
-            </p>
+            <p className="text-gray-600 leading-relaxed">{option.description}</p>
 
-            <button className="mt-6 flex items-center gap-2 text-yellow-600 font-medium group-hover:translate-x-2 transition-transform duration-300">
+            <Link
+              to={option.link}
+              className="mt-6 inline-flex items-center gap-2 text-yellow-600 font-medium group-hover:translate-x-2 transition-transform duration-300"
+            >
               Learn More <FaArrowRight />
-            </button>
+            </Link>
           </motion.div>
         ))}
       </div>

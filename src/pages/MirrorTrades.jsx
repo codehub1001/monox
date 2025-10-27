@@ -1,8 +1,13 @@
 import React from 'react'
+import TradingSection from '../components/Trading'
+import CoinSlider from '../components/CoinSlider'
 
 const MirrorTrades = () => {
   return (
-    <div>MirrorTrades</div>
+    <div>
+        <TradingSection/>
+        <CoinSlider/>
+    </div>
   )
 }
 

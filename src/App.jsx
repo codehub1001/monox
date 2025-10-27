@@ -15,6 +15,12 @@ import AboutUS from './pages/AboutUS';
 import CoinSlider from './components/CoinSlider';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import CryptoTrading from './components/CryptoTrading';
+import CopyTrading from './components/CopyTrading';
+import ForexTrading from './components/ForexTrading';
+import FuturesTrading from './components/FuturesTrading';
+import StocksTrading from './components/StocksTrading';
+import IndicesTrading from './components/IndicesTrading';
 
 const App = () => {
   return (
@@ -38,11 +44,17 @@ const App = () => {
           }
         />
         <Route path="/mirror-trades" element={<MirrorTrades />} />
-        <Route path="/planing-services" element={<Planing />} />
+        <Route path="/planning-services" element={<Planing />} />
         <Route path="/about" element={<AboutUS/>} />
         <Route path="/contact" element={<Contact/>} />
         <Route path="/register" element={<Register/>} />
         <Route path="/login" element={<Login/>} />
+        <Route path="/cryto-trading" element={<CryptoTrading/>} />
+        <Route path="/copy-trading" element={<CopyTrading/>} />
+        <Route path="/forex-trading" element={<ForexTrading/>} />
+        <Route path="/indices-trading" element={<IndicesTrading/>} />
+        <Route path="/stocks-trading" element={<StocksTrading/>} />
+        <Route path="/futures-trading" element={<FuturesTrading/>} />
       </Routes>
     </Router>
   );
