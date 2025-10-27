@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Banner from './components/Banner';
 import About from './components/About';
 import TradingSection from './components/Trading';
+import Services from './components/Services';
+import Subscribe from './components/Subscribe';
 const App = () => {
   return (
     <>
@@ -17,6 +19,8 @@ const App = () => {
           <Banner/>
           <About/>
           <TradingSection/>
+          <Services/>
+          <Subscribe/>
           </>
         }
         />
