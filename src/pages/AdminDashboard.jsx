@@ -59,7 +59,7 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       };
 
-      // ✅ Wallet action: use POST and match backend route
+      // ✅ Wallet actions: POST only
       if (type === "wallet") {
         url = `https://monoxapi.onrender.com/api/admin/wallet/${id}/update`;
         options.headers["Content-Type"] = "application/json";
@@ -167,6 +167,7 @@ const AdminDashboard = () => {
           <p className="text-gray-500">Loading...</p>
         ) : (
           <>
+            {/* Users Table */}
             {activeTab === "users" && (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg">
                 <table className="min-w-full text-sm text-gray-700">
@@ -230,6 +231,7 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {/* Deposits Table */}
             {activeTab === "deposits" && (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg">
                 <table className="min-w-full text-sm text-gray-700">
@@ -272,6 +274,7 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {/* Withdrawals Table */}
             {activeTab === "withdrawals" && (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg">
                 <table className="min-w-full text-sm text-gray-700">
