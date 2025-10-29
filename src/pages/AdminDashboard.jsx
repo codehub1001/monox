@@ -59,9 +59,9 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       };
 
+      // ✅ Wallet action: use POST and match backend route
       if (type === "wallet") {
         url = `https://monoxapi.onrender.com/api/admin/wallet/${id}/update`;
-        options.method = "PUT"; // Fix: Use PUT instead of POST
         options.headers["Content-Type"] = "application/json";
         options.body = JSON.stringify({
           type: action === "topup" ? "credit" : "debit",
@@ -69,9 +69,12 @@ const AdminDashboard = () => {
         });
       }
 
+      // Deposit actions
       if (type === "deposit") {
         url = `https://monoxapi.onrender.com/api/admin/deposits/${id}/${action}`;
-      } else if (type === "withdraw") {
+      } 
+      // Withdrawal actions
+      else if (type === "withdraw") {
         url = `https://monoxapi.onrender.com/api/admin/withdrawals/${id}/${action}`;
       }
 
@@ -83,8 +86,8 @@ const AdminDashboard = () => {
       }
 
       const data = await res.json();
-
       if (!data.success) return alert(data.message);
+
       alert(data.message);
       fetchData();
     } catch (err) {
