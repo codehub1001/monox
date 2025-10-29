@@ -106,7 +106,7 @@ const UserDashboard = () => {
       setLoadingDashboard(true);
       const [walletRes, txRes] = await Promise.all([
         axios.get("https://monoxapi.onrender.com/api/wallet", { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get("https://monoxapi.onrender.com/transactions", { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get("https://monoxapi.onrender.com/api/wallet/transactions", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const balance = walletRes.data?.balance ?? 0;
       setWallet(balance);
