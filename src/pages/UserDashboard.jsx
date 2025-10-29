@@ -105,8 +105,8 @@ const UserDashboard = () => {
     try {
       setLoadingDashboard(true);
       const [walletRes, txRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/wallet", { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get("http://localhost:5000/api/wallet/transactions", { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get("https://monoxapi.onrender.com/api/wallet", { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get("https://monoxapi.onrender.com/transactions", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const balance = walletRes.data?.balance ?? 0;
       setWallet(balance);
@@ -123,7 +123,7 @@ const UserDashboard = () => {
   const fetchProfile = async () => {
     try {
       setLoadingProfile(true);
-      const res = await axios.get("http://localhost:5000/api/users/me", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get("https://monoxapi.onrender.com/api/users/me", { headers: { Authorization: `Bearer ${token}` } });
       const userData = res.data;
       setProfile({
         ...userData,
@@ -172,7 +172,7 @@ const UserDashboard = () => {
     const intervalPrice = setInterval(fetchBtcPrice, 60000);
     const intervalRates = setInterval(fetchCryptoRates, 60000);
 
-    const socket = io("http://localhost:5000");
+    const socket = io("https://monoxapi.onrender.com");
     if (profile?.id) {
       socket.on(`wallet-update-${profile.id}`, (data) => {
         setWallet(data.balance);
@@ -199,7 +199,7 @@ const UserDashboard = () => {
     try {
       const endpoint = walletModal.type === "deposit" ? "/wallet/deposit" : "/wallet/withdraw";
       await axios.post(
-        `http://localhost:5000/api${endpoint}`,
+        `https://monoxapi.onrender.com/api${endpoint}`,
         { amount: Number(amount), crypto: cryptoType },
         { headers: { Authorization: `Bearer ${token}` } }
       );

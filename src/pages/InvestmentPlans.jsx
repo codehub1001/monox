@@ -12,7 +12,7 @@ const InvestmentPlans = ({ token }) => {
   const fetchPlans = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://monoxapi.onrender.com/api/investments/plans", {
+      const res = await axios.get("https://monoxapi.onrender.com/api/investments/plans", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPlans(res.data.plans || []);
@@ -39,7 +39,7 @@ const InvestmentPlans = ({ token }) => {
         amount: Number(plan.amount), // backend expects amount
       };
 
-      const res = await axios.post("http://monoxapi.onrender.com/api/investments", payload, {
+      const res = await axios.post("https://monoxapi.onrender.com/api/investments", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

@@ -25,11 +25,11 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       let url = "";
-      if (activeTab === "users") url = "http://monoxapi.onrender.com/api/admin/users";
+      if (activeTab === "users") url = "https://monoxapi.onrender.com/api/admin/users";
       if (activeTab === "deposits")
-        url = "http://monoxapi.onrender.com/api/admin/deposits/pending";
+        url = "https://monoxapi.onrender.com/api/admin/deposits/pending";
       if (activeTab === "withdrawals")
-        url = "http://monoxapi.onrender.com/api/admin/withdrawals/pending";
+        url = "https://monoxapi.onrender.com/api/admin/withdrawals/pending";
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -61,7 +61,7 @@ const AdminDashboard = () => {
       };
 
       if (type === "wallet") {
-        url = `http://monoxapi.onrender.com/api/admin/wallet/${id}/update`;
+        url = `https//monoxapi.onrender.com/api/admin/wallet/${id}/update`;
         options.headers["Content-Type"] = "application/json";
         options.body = JSON.stringify({
           type: action === "topup" ? "credit" : "debit",
@@ -71,9 +71,9 @@ const AdminDashboard = () => {
 
       // ✅ Use plural route names to match backend
       if (type === "deposit") {
-        url = `http://monoxapi.onrender.com/api/admin/deposits/${id}/${action}`;
+        url = `https://monoxapi.onrender.com/api/admin/deposits/${id}/${action}`;
       } else if (type === "withdraw") {
-        url = `http://monoxapi.onrender.com/api/admin/withdrawals/${id}/${action}`;
+        url = `https://monoxapi.onrender.com/api/admin/withdrawals/${id}/${action}`;
       }
 
       const res = await fetch(url, options);
