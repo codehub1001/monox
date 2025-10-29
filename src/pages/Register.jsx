@@ -103,7 +103,7 @@ const Register = () => {
       if (form.referral.trim() !== "")
         payload.referralCode = form.referral.trim();
 
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch("http://monoxapi.onrender.com/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
