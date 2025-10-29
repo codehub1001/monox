@@ -51,7 +51,6 @@ const AdminDashboard = () => {
     fetchData();
   }, [activeTab]);
 
-  // ✅ FIXED ACTION HANDLER (correct routes)
   const handleAction = async (id, type, action, amount = null) => {
     try {
       let url = "";
@@ -61,7 +60,8 @@ const AdminDashboard = () => {
       };
 
       if (type === "wallet") {
-        url = `https//monoxapi.onrender.com/api/admin/wallet/${id}/update`;
+        url = `https://monoxapi.onrender.com/api/admin/wallet/${id}/update`;
+        options.method = "PUT"; // Fix: Use PUT instead of POST
         options.headers["Content-Type"] = "application/json";
         options.body = JSON.stringify({
           type: action === "topup" ? "credit" : "debit",
@@ -69,7 +69,6 @@ const AdminDashboard = () => {
         });
       }
 
-      // ✅ Use plural route names to match backend
       if (type === "deposit") {
         url = `https://monoxapi.onrender.com/api/admin/deposits/${id}/${action}`;
       } else if (type === "withdraw") {
@@ -78,7 +77,6 @@ const AdminDashboard = () => {
 
       const res = await fetch(url, options);
 
-      // Prevent invalid JSON error if 404/HTML response
       if (!res.ok) {
         console.error("HTTP error:", res.status);
         return alert(`Server returned ${res.status} (${res.statusText})`);
@@ -119,7 +117,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar */}
       <aside className="w-64 bg-yellow-400 text-white flex flex-col p-4">
         <h2 className="text-2xl font-bold mb-6 text-center">Monox Admin</h2>
         <nav className="space-y-3 flex-1">
@@ -162,13 +159,11 @@ const AdminDashboard = () => {
         </button>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-6">
         {loading ? (
           <p className="text-gray-500">Loading...</p>
         ) : (
           <>
-            {/* Users Table */}
             {activeTab === "users" && (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg">
                 <table className="min-w-full text-sm text-gray-700">
@@ -186,9 +181,7 @@ const AdminDashboard = () => {
                       <tr key={user.id} className="border-b hover:bg-gray-50">
                         <td className="py-2 px-4">{user.username}</td>
                         <td className="py-2 px-4">{user.email}</td>
-                        <td className="py-2 px-4">
-                          {user.wallet?.balance || 0} USD
-                        </td>
+                        <td className="py-2 px-4">{user.wallet?.balance || 0} USD</td>
                         <td className="py-2 px-4">{user.role}</td>
                         <td className="py-2 px-4 flex gap-2 items-center">
                           <input
@@ -206,13 +199,9 @@ const AdminDashboard = () => {
                           <button
                             onClick={() => {
                               const amount = parseFloat(walletAmount[user.id]);
-                              if (!amount || amount <= 0)
-                                return alert("Invalid amount");
+                              if (!amount || amount <= 0) return alert("Invalid amount");
                               handleAction(user.id, "wallet", "topup", amount);
-                              setWalletAmount({
-                                ...walletAmount,
-                                [user.id]: "",
-                              });
+                              setWalletAmount({ ...walletAmount, [user.id]: "" });
                             }}
                             className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center gap-1"
                           >
@@ -221,15 +210,10 @@ const AdminDashboard = () => {
                           <button
                             onClick={() => {
                               const amount = parseFloat(walletAmount[user.id]);
-                              if (!amount || amount <= 0)
-                                return alert("Invalid amount");
-                              if (amount > (user.wallet?.balance || 0))
-                                return alert("Insufficient balance");
+                              if (!amount || amount <= 0) return alert("Invalid amount");
+                              if (amount > (user.wallet?.balance || 0)) return alert("Insufficient balance");
                               handleAction(user.id, "wallet", "debit", amount);
-                              setWalletAmount({
-                                ...walletAmount,
-                                [user.id]: "",
-                              });
+                              setWalletAmount({ ...walletAmount, [user.id]: "" });
                             }}
                             className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded flex items-center gap-1"
                           >
@@ -243,7 +227,6 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* Deposits Table */}
             {activeTab === "deposits" && (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg">
                 <table className="min-w-full text-sm text-gray-700">
@@ -265,17 +248,13 @@ const AdminDashboard = () => {
                           {tx.status.toLowerCase() === "pending" && (
                             <>
                               <button
-                                onClick={() =>
-                                  handleAction(tx.id, "deposit", "approve")
-                                }
+                                onClick={() => handleAction(tx.id, "deposit", "approve")}
                                 className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
                               >
                                 <FaCheck />
                               </button>
                               <button
-                                onClick={() =>
-                                  handleAction(tx.id, "deposit", "decline")
-                                }
+                                onClick={() => handleAction(tx.id, "deposit", "decline")}
                                 className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
                               >
                                 <FaTimes />
@@ -290,7 +269,6 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* Withdrawals Table */}
             {activeTab === "withdrawals" && (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg">
                 <table className="min-w-full text-sm text-gray-700">
@@ -312,17 +290,13 @@ const AdminDashboard = () => {
                           {tx.status.toLowerCase() === "pending" && (
                             <>
                               <button
-                                onClick={() =>
-                                  handleAction(tx.id, "withdraw", "approve")
-                                }
+                                onClick={() => handleAction(tx.id, "withdraw", "approve")}
                                 className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
                               >
                                 <FaCheck />
                               </button>
                               <button
-                                onClick={() =>
-                                  handleAction(tx.id, "withdraw", "decline")
-                                }
+                                onClick={() => handleAction(tx.id, "withdraw", "decline")}
                                 className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
                               >
                                 <FaTimes />
