@@ -51,6 +51,7 @@ const AdminDashboard = () => {
     fetchData();
   }, [activeTab]);
 
+  // ✅ FIXED ACTION HANDLER (correct routes)
   const handleAction = async (id, type, action, amount = null) => {
     try {
       let url = "";
@@ -59,7 +60,6 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       };
 
-      // Wallet top-up or debit
       if (type === "wallet") {
         url = `http://localhost:5000/api/admin/wallet/${id}/update`;
         options.headers["Content-Type"] = "application/json";
@@ -69,20 +69,28 @@ const AdminDashboard = () => {
         });
       }
 
-      // Deposit or Withdraw approve/decline
-      if (type === "deposit" || type === "withdraw") {
-        url = `http://localhost:5000/api/admin/${type}/${id}/${action}`;
-        options.method = "POST";
+      // ✅ Use plural route names to match backend
+      if (type === "deposit") {
+        url = `http://localhost:5000/api/admin/deposits/${id}/${action}`;
+      } else if (type === "withdraw") {
+        url = `http://localhost:5000/api/admin/withdrawals/${id}/${action}`;
       }
 
       const res = await fetch(url, options);
+
+      // Prevent invalid JSON error if 404/HTML response
+      if (!res.ok) {
+        console.error("HTTP error:", res.status);
+        return alert(`Server returned ${res.status} (${res.statusText})`);
+      }
+
       const data = await res.json();
 
       if (!data.success) return alert(data.message);
       alert(data.message);
       fetchData();
     } catch (err) {
-      console.error(err);
+      console.error("handleAction error:", err);
       alert("Failed to perform action.");
     }
   };
@@ -95,8 +103,8 @@ const AdminDashboard = () => {
   const statusBadge = (status) => {
     const colors = {
       PENDING: "bg-yellow-200 text-yellow-800",
-      APPROVED: "bg-green-200 text-green-800",
-      DECLINED: "bg-red-200 text-red-800",
+      SUCCESS: "bg-green-200 text-green-800",
+      FAILED: "bg-red-200 text-red-800",
     };
     return (
       <span

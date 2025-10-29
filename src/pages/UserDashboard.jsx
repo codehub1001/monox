@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import axios from "axios";
 import { io } from "socket.io-client";
+import toast, { Toaster } from "react-hot-toast";
 
 // --- Profile Component ---
 const Profile = ({ profile, loading }) => {
@@ -87,6 +88,16 @@ const UserDashboard = () => {
   const [walletModal, setWalletModal] = useState({ open: false, type: "" });
   const [amount, setAmount] = useState("");
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // --- Deposit two-step modal states ---
+  const [depositStep, setDepositStep] = useState(1);
+  const [cryptoType, setCryptoType] = useState("BTC");
+  const [cryptoAmount, setCryptoAmount] = useState(0);
+  const [cryptoRates, setCryptoRates] = useState({ BTC: 0, ETH: 0, USDT: 1 });
+
   const token = localStorage.getItem("token");
 
   // --- Fetch dashboard data ---
@@ -100,7 +111,7 @@ const UserDashboard = () => {
       const balance = walletRes.data?.balance ?? 0;
       setWallet(balance);
       setTransactions(txRes.data || []);
-      setProfile(prev => prev ? { ...prev, wallet: balance } : prev);
+      setProfile((prev) => (prev ? { ...prev, wallet: balance } : prev));
     } catch (err) {
       console.error("Dashboard fetch error:", err);
     } finally {
@@ -137,22 +148,41 @@ const UserDashboard = () => {
     }
   };
 
+  // --- Fetch live crypto rates ---
+  const fetchCryptoRates = async () => {
+    try {
+      const res = await axios.get(
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd"
+      );
+      setCryptoRates({
+        BTC: res.data.bitcoin.usd,
+        ETH: res.data.ethereum.usd,
+        USDT: res.data.tether.usd,
+      });
+    } catch (err) {
+      console.error("Error fetching crypto rates:", err);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
     fetchProfile();
     fetchBtcPrice();
-    const interval = setInterval(fetchBtcPrice, 60000);
+    fetchCryptoRates();
+    const intervalPrice = setInterval(fetchBtcPrice, 60000);
+    const intervalRates = setInterval(fetchCryptoRates, 60000);
 
     const socket = io("http://localhost:5000");
     if (profile?.id) {
       socket.on(`wallet-update-${profile.id}`, (data) => {
         setWallet(data.balance);
-        setProfile(prev => prev ? { ...prev, wallet: data.balance } : prev);
+        setProfile((prev) => (prev ? { ...prev, wallet: data.balance } : prev));
       });
     }
 
     return () => {
-      clearInterval(interval);
+      clearInterval(intervalPrice);
+      clearInterval(intervalRates);
       socket.disconnect();
     };
   }, [profile?.id]);
@@ -162,45 +192,102 @@ const UserDashboard = () => {
     window.location.href = "/login";
   };
 
+  // --- Wallet actions with toast ---
   const handleWalletAction = async () => {
     if (!amount || isNaN(amount) || amount <= 0) return;
+    const loadingToast = toast.loading("Processing your request...");
     try {
       const endpoint = walletModal.type === "deposit" ? "/wallet/deposit" : "/wallet/withdraw";
-      await axios.post(`http://localhost:5000/api${endpoint}`, { amount: Number(amount) }, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post(
+        `http://localhost:5000/api${endpoint}`,
+        { amount: Number(amount), crypto: cryptoType },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(
+        walletModal.type === "deposit"
+          ? "Deposit request submitted successfully!"
+          : "Withdrawal request submitted successfully!"
+      );
       setWalletModal({ open: false, type: "" });
+      setDepositStep(1);
       setAmount("");
       fetchDashboardData();
       fetchProfile();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || "Transaction failed");
+      toast.error(err.response?.data?.error || "Transaction failed");
+    } finally {
+      toast.dismiss(loadingToast);
     }
   };
 
-  const portfolioHistory = investments.map((inv, idx) => ({ date: `Day ${idx + 1}`, value: inv.amount + wallet }));
+  const portfolioHistory = investments.map((inv, idx) => ({
+    date: `Day ${idx + 1}`,
+    value: inv.amount + wallet,
+  }));
 
-  if (loadingDashboard && view === "dashboard") return <p className="text-center mt-20 text-gray-500">Loading dashboard...</p>;
+  if (loadingDashboard && view === "dashboard")
+    return <p className="text-center mt-20 text-gray-500">Loading dashboard...</p>;
+
+  // Pagination
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentTransactions = transactions.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+
+  // --- Calculate crypto amount ---
+  const calculateCryptoAmount = () => {
+    if (!amount || isNaN(amount) || amount <= 0) return;
+    setCryptoAmount((Number(amount) / cryptoRates[cryptoType]).toFixed(6));
+  };
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
+      <Toaster position="top-right" reverseOrder={false} />
+
       {sidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 z-50 bg-white shadow-lg h-full w-64 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+      <div
+        className={`fixed top-0 left-0 z-50 bg-white shadow-lg h-full w-64 transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
+      >
         <div className="flex items-center justify-between h-16 border-b border-gray-200 px-4">
           <h1 className="text-2xl font-bold text-yellow-400">Monox</h1>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-600 text-xl"><FaTimes /></button>
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-600 text-xl">
+            <FaTimes />
+          </button>
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          {[{ name: "Dashboard", icon: <FaChartLine />, view: "dashboard" }, { name: "Profile", icon: <FaUserCircle />, view: "profile" }].map((item) => (
-            <motion.div key={item.name} whileHover={{ scale: 1.05 }} onClick={() => { setView(item.view); setSidebarOpen(false); }} className={`flex items-center p-3 rounded-lg cursor-pointer transition-all ${view === item.view ? "bg-yellow-400 text-white shadow-md" : "text-gray-700 hover:bg-yellow-50"}`}>
+          {[
+            { name: "Dashboard", icon: <FaChartLine />, view: "dashboard" },
+            { name: "Profile", icon: <FaUserCircle />, view: "profile" },
+            { name: "Invest", icon: <FaArrowUp />, view: "invest" },
+          ].map((item) => (
+            <motion.div
+              key={item.name}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => {
+                setView(item.view);
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center p-3 rounded-lg cursor-pointer transition-all ${
+                view === item.view ? "bg-yellow-400 text-white shadow-md" : "text-gray-700 hover:bg-yellow-50"
+              }`}
+            >
               <span className="text-lg mr-3">{item.icon}</span>
               <span className="font-medium">{item.name}</span>
             </motion.div>
           ))}
         </nav>
         <div className="border-t p-4">
-          <button onClick={handleLogout} className="w-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition-all"><FaPowerOff className="mr-2" /> Logout</button>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition-all"
+          >
+            <FaPowerOff className="mr-2" /> Logout
+          </button>
         </div>
       </div>
 
@@ -208,7 +295,9 @@ const UserDashboard = () => {
       <div className="flex-1 flex flex-col md:ml-64">
         <header className="flex items-center justify-between bg-white px-4 sm:px-6 h-16 shadow sticky top-0 z-50">
           <div className="flex items-center space-x-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-gray-700 text-2xl z-50"><FaBars /></button>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-gray-700 text-2xl z-50">
+              <FaBars />
+            </button>
             <FaBitcoin className="text-yellow-500 text-lg sm:text-xl" />
             <span className="font-semibold text-gray-700 text-sm sm:text-base">${btcPrice}</span>
           </div>
@@ -222,18 +311,37 @@ const UserDashboard = () => {
         </header>
 
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
-          {view === "dashboard" ? (
+          {view === "dashboard" && (
             <>
+              {/* Metrics */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <MetricCard title="Wallet Balance" value={`$${wallet.toLocaleString()}`} icon={<FaWallet />} actions={[
-                  <button key="deposit" onClick={() => setWalletModal({ open: true, type: "deposit" })} className="bg-yellow-400 px-3 py-1 rounded text-white hover:bg-yellow-500 text-xs sm:text-sm">Deposit</button>,
-                  <button key="withdraw" onClick={() => setWalletModal({ open: true, type: "withdraw" })} className="bg-red-400 px-3 py-1 rounded text-white hover:bg-red-500 text-xs sm:text-sm">Withdraw</button>,
-                ]}/>
+                <MetricCard
+                  title="Wallet Balance"
+                  value={`$${wallet.toLocaleString()}`}
+                  icon={<FaWallet />}
+                  actions={[
+                    <button
+                      key="deposit"
+                      onClick={() => setWalletModal({ open: true, type: "deposit" })}
+                      className="bg-yellow-400 px-3 py-1 rounded text-white hover:bg-yellow-500 text-xs sm:text-sm"
+                    >
+                      Deposit
+                    </button>,
+                    <button
+                      key="withdraw"
+                      onClick={() => setWalletModal({ open: true, type: "withdraw" })}
+                      className="bg-red-400 px-3 py-1 rounded text-white hover:bg-red-500 text-xs sm:text-sm"
+                    >
+                      Withdraw
+                    </button>,
+                  ]}
+                />
                 <MetricCard title="Active Investments" value={investments.length} icon={<FaArrowUp />} />
-                <MetricCard title="Pending Transactions" value={transactions.filter(tx => tx.status === "pending").length} icon={<FaArrowDown />}/>
-                <MetricCard title="Total Transactions" value={transactions.length} icon={<FaChartLine />}/>
+                <MetricCard title="Pending Transactions" value={transactions.filter((tx) => tx.status === "pending").length} icon={<FaArrowDown />} />
+                <MetricCard title="Total Transactions" value={transactions.length} icon={<FaChartLine />} />
               </div>
 
+              {/* Portfolio Chart */}
               <div className="bg-white p-4 rounded-xl shadow mb-6">
                 <h3 className="text-base sm:text-lg font-semibold mb-4 text-gray-700">Portfolio Value</h3>
                 <ResponsiveContainer width="100%" height={200}>
@@ -241,11 +349,12 @@ const UserDashboard = () => {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
-                    <Line type="monotone" dataKey="value" stroke="#facc15" strokeWidth={2}/>
+                    <Line type="monotone" dataKey="value" stroke="#facc15" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
+              {/* Transactions */}
               <div className="bg-white p-4 rounded-xl shadow">
                 <h3 className="text-base sm:text-lg font-semibold mb-4 text-gray-700">Recent Transactions</h3>
                 <div className="overflow-x-auto">
@@ -258,7 +367,7 @@ const UserDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {transactions.map(tx => (
+                      {currentTransactions.map((tx) => (
                         <tr key={tx.id} className="border-b hover:bg-yellow-50 transition-all">
                           <td className="py-2 px-3">{tx.type}</td>
                           <td className="py-2 px-3">${tx.amount}</td>
@@ -268,23 +377,63 @@ const UserDashboard = () => {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination Controls */}
+                <div className="flex justify-center items-center space-x-2 mt-4">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => p - 1)}
+                    className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                  >
+                    Prev
+                  </button>
+                  <span className="text-gray-700 text-sm">
+                    Page {currentPage} of {totalPages || 1}
+                  </span>
+                  <button
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </>
-          ) : <Profile profile={profile} loading={loadingProfile}/>}
+          )}
 
+          {view === "profile" && <Profile profile={profile} loading={loadingProfile} />}
+
+          {view === "invest" && (
+            <div className="bg-white p-6 rounded-xl shadow text-center text-gray-700 mt-6">
+              <h2 className="text-xl font-bold mb-4">Investments</h2>
+              <p>Here you can manage your investments. Feature coming soon!</p>
+            </div>
+          )}
+
+          {/* --- Wallet Modal --- */}
           {walletModal.open && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white rounded-xl p-6 w-80">
-                <h2 className="text-xl font-semibold mb-4">{walletModal.type === "deposit" ? "Deposit Funds" : "Withdraw Funds"}</h2>
-                <input type="number" className="w-full border p-2 rounded mb-4" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full">
+                <h3 className="text-lg font-bold text-gray-700 mb-4 capitalize">{walletModal.type}</h3>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-yellow-400"
+                />
                 <div className="flex justify-end space-x-2">
-                  <button onClick={() => setWalletModal({ open: false, type: "" })} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
-                  <button onClick={handleWalletAction} className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-white">{walletModal.type === "deposit" ? "Deposit" : "Withdraw"}</button>
+                  <button onClick={() => setWalletModal({ open: false, type: "" })} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
+                    Cancel
+                  </button>
+                  <button onClick={handleWalletAction} className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-white">
+                    Submit
+                  </button>
                 </div>
               </div>
             </div>
           )}
-
         </main>
       </div>
     </div>

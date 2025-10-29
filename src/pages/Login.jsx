@@ -4,6 +4,7 @@ import { FaEnvelope, FaLock } from "react-icons/fa";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CoinSlider from "../components/CoinSlider";
 
 const Login = () => {
   const [form, setForm] = useState({
@@ -61,6 +62,7 @@ const Login = () => {
   };
 
   return (
+    <div>
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 relative overflow-hidden">
@@ -137,8 +139,14 @@ const Login = () => {
           </Link>
         </p>
       </div>
+
     </div>
+    <CoinSlider/>
+    </div>
+    
+    
   );
 };
+
 
 export default Login;

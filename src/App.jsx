@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
@@ -24,12 +24,11 @@ import IndicesTrading from './components/IndicesTrading';
 import UserDashboard from './pages/UserDashboard';
 import Profile from './components/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import Loader from './components/Loader'; // ✅ Import your loader
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  // Hide Header/Footer on these paths
   const hideLayout = ['/userdashboard', '/admindashboard'];
-
   return (
     <>
       {!hideLayout.includes(location.pathname) && <Header />}
@@ -39,42 +38,63 @@ const Layout = ({ children }) => {
   );
 };
 
+const AppContent = () => {
+  const location = useLocation();
+  const [loading, setLoading] = useState(true);
+
+  // Show loader on route change
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => setLoading(false), 1200); // Loader shows for 1.2s
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  return (
+    <>
+      {loading && <Loader />}
+      {!loading && (
+        <Layout>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <Banner />
+                  <About />
+                  <TradingSection />
+                  <Services />
+                  <Subscribe />
+                  <HowToGetStarted />
+                  <CoinSlider/>
+                </>
+              }
+            />
+            <Route path="/mirror-trades" element={<MirrorTrades />} />
+            <Route path="/planning-services" element={<Planing />} />
+            <Route path="/about" element={<AboutUS/>} />
+            <Route path="/contact" element={<Contact/>} />
+            <Route path="/register" element={<Register/>} />
+            <Route path="/login" element={<Login/>} />
+            <Route path="/cryto-trading" element={<CryptoTrading/>} />
+            <Route path="/copy-trading" element={<CopyTrading/>} />
+            <Route path="/forex-trading" element={<ForexTrading/>} />
+            <Route path="/indices-trading" element={<IndicesTrading/>} />
+            <Route path="/stocks-trading" element={<StocksTrading/>} />
+            <Route path="/futures-trading" element={<FuturesTrading/>} />
+            <Route path="/userdashboard" element={<UserDashboard/>} />
+            <Route path="/admindashboard" element={<AdminDashboard/>} />
+            <Route path="/profile" element={<Profile/>} />
+          </Routes>
+        </Layout>
+      )}
+    </>
+  );
+};
+
 const App = () => {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <Banner />
-                <About />
-                <TradingSection />
-                <Services />
-                <Subscribe />
-                <HowToGetStarted />
-                <CoinSlider/>
-              </>
-            }
-          />
-          <Route path="/mirror-trades" element={<MirrorTrades />} />
-          <Route path="/planning-services" element={<Planing />} />
-          <Route path="/about" element={<AboutUS/>} />
-          <Route path="/contact" element={<Contact/>} />
-          <Route path="/register" element={<Register/>} />
-          <Route path="/login" element={<Login/>} />
-          <Route path="/cryto-trading" element={<CryptoTrading/>} />
-          <Route path="/copy-trading" element={<CopyTrading/>} />
-          <Route path="/forex-trading" element={<ForexTrading/>} />
-          <Route path="/indices-trading" element={<IndicesTrading/>} />
-          <Route path="/stocks-trading" element={<StocksTrading/>} />
-          <Route path="/futures-trading" element={<FuturesTrading/>} />
-          <Route path="/userdashboard" element={<UserDashboard/>} />
-          <Route path="/admindashboard" element={<AdminDashboard/>} />
-          <Route path="/profile" element={<Profile/>} />
-        </Routes>
-      </Layout>
+      <AppContent />
     </Router>
   );
 };
