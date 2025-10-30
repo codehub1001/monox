@@ -165,7 +165,7 @@ const UserDashboard = () => {
     }
   };
 
-  // --- Socket.IO integration ---
+  // --- Initialize dashboard ---
   useEffect(() => {
     fetchDashboardData();
     fetchProfile();
@@ -173,13 +173,17 @@ const UserDashboard = () => {
     fetchCryptoRates();
     const intervalPrice = setInterval(fetchBtcPrice, 60000);
     const intervalRates = setInterval(fetchCryptoRates, 60000);
+    return () => {
+      clearInterval(intervalPrice);
+      clearInterval(intervalRates);
+    };
+  }, []);
 
+  // --- Socket.IO for notifications and wallet updates ---
+  useEffect(() => {
     if (!profile?.id) return;
 
-    const socket = io("https://monoxapi.onrender.com", {
-      transports: ["websocket"],
-      secure: true,
-    });
+    const socket = io("https://monoxapi.onrender.com", { transports: ["websocket"], secure: true });
 
     // Wallet updates
     socket.on(`wallet-update-${profile.id}`, (data) => {
@@ -195,8 +199,6 @@ const UserDashboard = () => {
     });
 
     return () => {
-      clearInterval(intervalPrice);
-      clearInterval(intervalRates);
       socket.disconnect();
     };
   }, [profile?.id]);
@@ -206,7 +208,7 @@ const UserDashboard = () => {
     window.location.href = "/login";
   };
 
-  // --- Wallet actions with toast ---
+  // --- Wallet actions ---
   const handleWalletAction = async () => {
     if (!amount || isNaN(amount) || amount <= 0) return;
     const loadingToast = toast.loading("Processing your request...");
@@ -249,6 +251,7 @@ const UserDashboard = () => {
   const currentTransactions = transactions.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
 
+  // --- Main return (unchanged structure from your code) ---
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       <Toaster position="top-right" reverseOrder={false} />
@@ -426,7 +429,7 @@ const UserDashboard = () => {
             </div>
           )}
 
-          {/* --- Wallet Modal --- */}
+          {/* Wallet Modal */}
           {walletModal.open && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full">
