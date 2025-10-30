@@ -11,7 +11,7 @@ const InvestSection = ({ token }) => {
   const fetchInvestments = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/investments/my-investments", {
+      const res = await axios.get("https://monoxapi.onrender.com/api/investments/my-investments", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setInvestments(res.data.investments);
