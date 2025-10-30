@@ -88,6 +88,7 @@ const UserDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletModal, setWalletModal] = useState({ open: false, type: "" });
   const [amount, setAmount] = useState("");
+  const [notifications, setNotifications] = useState([]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -164,6 +165,7 @@ const UserDashboard = () => {
     }
   };
 
+  // --- Socket.IO integration ---
   useEffect(() => {
     fetchDashboardData();
     fetchProfile();
@@ -172,17 +174,25 @@ const UserDashboard = () => {
     const intervalPrice = setInterval(fetchBtcPrice, 60000);
     const intervalRates = setInterval(fetchCryptoRates, 60000);
 
+    if (!profile?.id) return;
+
     const socket = io("https://monoxapi.onrender.com", {
-      transports: ["websocket"], // ⚡ force websocket to avoid 400 error
+      transports: ["websocket"],
       secure: true,
     });
 
-    if (profile?.id) {
-      socket.on(`wallet-update-${profile.id}`, (data) => {
-        setWallet(data.balance);
-        setProfile((prev) => (prev ? { ...prev, wallet: data.balance } : prev));
-      });
-    }
+    // Wallet updates
+    socket.on(`wallet-update-${profile.id}`, (data) => {
+      setWallet(data.balance);
+      setProfile((prev) => (prev ? { ...prev, wallet: data.balance } : prev));
+      toast.success("💰 Wallet updated!");
+    });
+
+    // Notifications
+    socket.on(`notification-${profile.id}`, (data) => {
+      setNotifications((prev) => [data, ...prev]);
+      toast.success(data.message || "🔔 You have a new notification!");
+    });
 
     return () => {
       clearInterval(intervalPrice);
@@ -299,8 +309,16 @@ const UserDashboard = () => {
             <FaBitcoin className="text-yellow-500 text-lg sm:text-xl" />
             <span className="font-semibold text-gray-700 text-sm sm:text-base">${btcPrice}</span>
           </div>
-          <div className="flex items-center space-x-4">
-            <FaBell className="text-gray-600 text-lg cursor-pointer" />
+          <div className="flex items-center space-x-4 relative">
+            {/* Notification Icon with badge */}
+            <div className="relative cursor-pointer">
+              <FaBell className="text-gray-600 text-lg" />
+              {notifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                  {notifications.length}
+                </span>
+              )}
+            </div>
             <div onClick={() => setView("profile")} className="flex items-center cursor-pointer">
               <FaUserCircle className="text-gray-600 text-2xl" />
               <span className="ml-2 text-gray-700 font-medium hidden sm:inline">{profile?.firstName}</span>
