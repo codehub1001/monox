@@ -165,7 +165,7 @@ const UserDashboard = () => {
     }
   };
 
-  // --- Initialize dashboard ---
+  // --- Socket.IO integration ---
   useEffect(() => {
     fetchDashboardData();
     fetchProfile();
@@ -173,17 +173,13 @@ const UserDashboard = () => {
     fetchCryptoRates();
     const intervalPrice = setInterval(fetchBtcPrice, 60000);
     const intervalRates = setInterval(fetchCryptoRates, 60000);
-    return () => {
-      clearInterval(intervalPrice);
-      clearInterval(intervalRates);
-    };
-  }, []);
 
-  // --- Socket.IO for notifications and wallet updates ---
-  useEffect(() => {
     if (!profile?.id) return;
 
-    const socket = io("https://monoxapi.onrender.com", { transports: ["websocket"], secure: true });
+    const socket = io("https://monoxapi.onrender.com", {
+      transports: ["websocket"],
+      secure: true,
+    });
 
     // Wallet updates
     socket.on(`wallet-update-${profile.id}`, (data) => {
@@ -192,13 +188,26 @@ const UserDashboard = () => {
       toast.success("💰 Wallet updated!");
     });
 
-    // Notifications
+    // --- Notifications fix ---
     socket.on(`notification-${profile.id}`, (data) => {
       setNotifications((prev) => [data, ...prev]);
-      toast.success(data.message || "🔔 You have a new notification!");
+      toast.custom(
+        (t) => (
+          <div
+            className={`${
+              t.visible ? "animate-enter" : "animate-leave"
+            } bg-yellow-400 text-white p-3 rounded shadow-lg`}
+          >
+            {data.message || "🔔 You have a new notification!"}
+          </div>
+        ),
+        { duration: 5000 }
+      );
     });
 
     return () => {
+      clearInterval(intervalPrice);
+      clearInterval(intervalRates);
       socket.disconnect();
     };
   }, [profile?.id]);
@@ -208,7 +217,7 @@ const UserDashboard = () => {
     window.location.href = "/login";
   };
 
-  // --- Wallet actions ---
+  // --- Wallet actions with toast ---
   const handleWalletAction = async () => {
     if (!amount || isNaN(amount) || amount <= 0) return;
     const loadingToast = toast.loading("Processing your request...");
@@ -251,7 +260,6 @@ const UserDashboard = () => {
   const currentTransactions = transactions.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
 
-  // --- Main return (unchanged structure from your code) ---
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       <Toaster position="top-right" reverseOrder={false} />
@@ -406,11 +414,11 @@ const UserDashboard = () => {
                   >
                     Prev
                   </button>
-                  <span className="text-gray-700 text-sm">
-                    Page {currentPage} of {totalPages || 1}
+                  <span>
+                    Page {currentPage} of {totalPages}
                   </span>
                   <button
-                    disabled={currentPage === totalPages || totalPages === 0}
+                    disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => p + 1)}
                     className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
                   >
@@ -422,104 +430,46 @@ const UserDashboard = () => {
           )}
 
           {view === "profile" && <Profile profile={profile} loading={loadingProfile} />}
-
-          {view === "invest" && (
-            <div className="mt-6">
-              <InvestSection token={token} />
-            </div>
-          )}
-
-          {/* Wallet Modal */}
-          {walletModal.open && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full">
-                <h3 className="text-lg font-bold text-gray-700 mb-4 capitalize">{walletModal.type}</h3>
-
-                {/* Step 1: Enter Amount */}
-                {depositStep === 1 && walletModal.type === "deposit" && (
-                  <>
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter amount"
-                      className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-yellow-400"
-                    />
-                    <div className="flex justify-between">
-                      <button
-                        onClick={() => setWalletModal({ open: false, type: "" })}
-                        className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => amount > 0 && setDepositStep(2)}
-                        className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-white"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {/* Step 2: Show Wallet Address */}
-                {walletModal.type === "deposit" && depositStep === 2 && (
-                  <>
-                    <p className="text-gray-700 mb-4">
-                      You are depositing <strong>${amount}</strong> in <strong>{cryptoType}</strong>.
-                    </p>
-                    <p className="text-gray-600 text-sm mb-4">
-                      Please send <strong>{(Number(amount) / cryptoRates[cryptoType]).toFixed(6)}</strong> {cryptoType} to the wallet address below:
-                    </p>
-
-                    <div className="bg-gray-100 rounded p-3 mb-4 font-mono text-sm break-all">
-                      {cryptoType === "BTC" && "bc1qxyzexamplebtcaddress123"}
-                      {cryptoType === "ETH" && "0xexampleethaddress456"}
-                      {cryptoType === "USDT" && "TExampleusdtaddress789"}
-                    </div>
-
-                    <div className="flex justify-between">
-                      <button
-                        onClick={() => setDepositStep(1)}
-                        className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                      >
-                        Back
-                      </button>
-                      <button
-                        onClick={handleWalletAction}
-                        className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-white"
-                      >
-                        Submit
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {/* Withdraw */}
-                {walletModal.type === "withdraw" && depositStep === 1 && (
-                  <>
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter amount"
-                      className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-yellow-400"
-                    />
-                    <div className="flex justify-end space-x-2">
-                      <button onClick={() => setWalletModal({ open: false, type: "" })} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
-                        Cancel
-                      </button>
-                      <button onClick={handleWalletAction} className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-white">
-                        Submit
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+          {view === "invest" && <InvestSection investments={investments} />}
         </main>
       </div>
+
+      {/* Wallet Modal */}
+      {walletModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-80 sm:w-96">
+            <h3 className="text-lg font-semibold mb-4">{walletModal.type === "deposit" ? "Deposit Funds" : "Withdraw Funds"}</h3>
+            {depositStep === 1 && walletModal.type === "deposit" && (
+              <>
+                <label className="block mb-2">Select Crypto</label>
+                <select className="w-full p-2 mb-4 border rounded" value={cryptoType} onChange={(e) => setCryptoType(e.target.value)}>
+                  <option value="BTC">BTC</option>
+                  <option value="ETH">ETH</option>
+                  <option value="USDT">USDT</option>
+                </select>
+              </>
+            )}
+            <label className="block mb-2">Amount (USD)</label>
+            <input
+              type="number"
+              className="w-full p-2 mb-4 border rounded"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+            <div className="flex justify-end space-x-2">
+              <button onClick={() => setWalletModal({ open: false, type: "" })} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                Cancel
+              </button>
+              <button
+                onClick={handleWalletAction}
+                className="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+              >
+                {walletModal.type === "deposit" ? "Deposit" : "Withdraw"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
