@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FaWallet,
   FaChartLine,
@@ -89,6 +89,7 @@ const UserDashboard = () => {
   const [walletModal, setWalletModal] = useState({ open: false, type: "" });
   const [amount, setAmount] = useState("");
   const [notifications, setNotifications] = useState([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,6 +101,7 @@ const UserDashboard = () => {
   const [cryptoRates, setCryptoRates] = useState({ BTC: 0, ETH: 0, USDT: 1 });
 
   const token = localStorage.getItem("token");
+  const notifRef = useRef();
 
   // --- Fetch dashboard data ---
   const fetchDashboardData = async () => {
@@ -200,6 +202,17 @@ const UserDashboard = () => {
       socket.disconnect();
     };
   }, [profile?.id]);
+
+  // Close notifications dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotificationsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notifRef]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -310,15 +323,35 @@ const UserDashboard = () => {
             <span className="font-semibold text-gray-700 text-sm sm:text-base">${btcPrice}</span>
           </div>
           <div className="flex items-center space-x-4 relative">
-            {/* Notification Icon with badge */}
-            <div className="relative cursor-pointer">
-              <FaBell className="text-gray-600 text-lg" />
-              {notifications.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                  {notifications.length}
-                </span>
+            {/* Notification Icon with dropdown */}
+            <div ref={notifRef} className="relative">
+              <button
+                onClick={() => setNotificationsOpen((prev) => !prev)}
+                className="relative text-gray-600"
+              >
+                <FaBell className="text-gray-600 text-lg" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Dropdown */}
+              {notificationsOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg overflow-hidden z-50">
+                  {notifications.length === 0 && (
+                    <p className="text-gray-500 text-sm p-3">No notifications</p>
+                  )}
+                  {notifications.map((n, idx) => (
+                    <div key={idx} className="border-b last:border-b-0 p-3 text-sm text-gray-700 hover:bg-yellow-50 cursor-pointer">
+                      {n.message || "New notification"}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
+
             <div onClick={() => setView("profile")} className="flex items-center cursor-pointer">
               <FaUserCircle className="text-gray-600 text-2xl" />
               <span className="ml-2 text-gray-700 font-medium hidden sm:inline">{profile?.firstName}</span>
@@ -380,141 +413,44 @@ const UserDashboard = () => {
                         <th className="py-2 px-3 text-left">Type</th>
                         <th className="py-2 px-3 text-left">Amount</th>
                         <th className="py-2 px-3 text-left">Status</th>
+                        <th className="py-2 px-3 text-left">Date</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {currentTransactions.map((tx) => (
-                        <tr key={tx.id} className="border-b hover:bg-yellow-50 transition-all">
+                      {currentTransactions.map((tx, idx) => (
+                        <tr key={idx} className="border-b hover:bg-yellow-50">
                           <td className="py-2 px-3">{tx.type}</td>
-                          <td className="py-2 px-3">${tx.amount}</td>
+                          <td className="py-2 px-3">${tx.amount.toLocaleString()}</td>
                           <td className="py-2 px-3">{tx.status}</td>
+                          <td className="py-2 px-3">{new Date(tx.createdAt).toLocaleDateString()}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
 
-                {/* Pagination Controls */}
-                <div className="flex justify-center items-center space-x-2 mt-4">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                    className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                  >
-                    Prev
-                  </button>
-                  <span className="text-gray-700 text-sm">
-                    Page {currentPage} of {totalPages || 1}
-                  </span>
-                  <button
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-4 space-x-2">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`px-3 py-1 rounded ${
+                          currentPage === i + 1 ? "bg-yellow-400 text-white" : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
 
           {view === "profile" && <Profile profile={profile} loading={loadingProfile} />}
-
-          {view === "invest" && (
-            <div className="mt-6">
-              <InvestSection token={token} />
-            </div>
-          )}
-
-          {/* --- Wallet Modal --- */}
-          {walletModal.open && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full">
-                <h3 className="text-lg font-bold text-gray-700 mb-4 capitalize">{walletModal.type}</h3>
-
-                {/* Step 1: Enter Amount */}
-                {depositStep === 1 && walletModal.type === "deposit" && (
-                  <>
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter amount"
-                      className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-yellow-400"
-                    />
-                    <div className="flex justify-between">
-                      <button
-                        onClick={() => setWalletModal({ open: false, type: "" })}
-                        className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => amount > 0 && setDepositStep(2)}
-                        className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-white"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {/* Step 2: Show Wallet Address */}
-                {walletModal.type === "deposit" && depositStep === 2 && (
-                  <>
-                    <p className="text-gray-700 mb-4">
-                      You are depositing <strong>${amount}</strong> in <strong>{cryptoType}</strong>.
-                    </p>
-                    <p className="text-gray-600 text-sm mb-4">
-                      Please send <strong>{(Number(amount) / cryptoRates[cryptoType]).toFixed(6)}</strong> {cryptoType} to the wallet address below:
-                    </p>
-
-                    <div className="bg-gray-100 rounded p-3 mb-4 font-mono text-sm break-all">
-                      {cryptoType === "BTC" && "bc1qxyzexamplebtcaddress123"}
-                      {cryptoType === "ETH" && "0xexampleethaddress456"}
-                      {cryptoType === "USDT" && "TExampleusdtaddress789"}
-                    </div>
-
-                    <div className="flex justify-between">
-                      <button
-                        onClick={() => setDepositStep(1)}
-                        className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                      >
-                        Back
-                      </button>
-                      <button
-                        onClick={handleWalletAction}
-                        className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-white"
-                      >
-                        Submit
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {/* Withdraw */}
-                {walletModal.type === "withdraw" && depositStep === 1 && (
-                  <>
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="Enter amount"
-                      className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-yellow-400"
-                    />
-                    <div className="flex justify-end space-x-2">
-                      <button onClick={() => setWalletModal({ open: false, type: "" })} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
-                        Cancel
-                      </button>
-                      <button onClick={handleWalletAction} className="px-4 py-2 rounded bg-yellow-400 hover:bg-yellow-500 text-white">
-                        Submit
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+          {view === "invest" && <InvestSection />}
         </main>
       </div>
     </div>
