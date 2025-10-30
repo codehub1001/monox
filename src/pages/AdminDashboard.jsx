@@ -8,6 +8,8 @@ import {
   FaPlus,
   FaMinus,
   FaSignOutAlt,
+  FaBars,
+  FaTimesCircle,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -18,6 +20,7 @@ const AdminDashboard = () => {
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [walletAmount, setWalletAmount] = useState({});
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
@@ -25,7 +28,8 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       let url = "";
-      if (activeTab === "users") url = "https://monoxapi.onrender.com/api/admin/users";
+      if (activeTab === "users")
+        url = "https://monoxapi.onrender.com/api/admin/users";
       if (activeTab === "deposits")
         url = "https://monoxapi.onrender.com/api/admin/deposits/pending";
       if (activeTab === "withdrawals")
@@ -59,7 +63,6 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       };
 
-      // ✅ Wallet actions: POST only
       if (type === "wallet") {
         url = `https://monoxapi.onrender.com/api/admin/wallet/${id}/update`;
         options.headers["Content-Type"] = "application/json";
@@ -69,17 +72,13 @@ const AdminDashboard = () => {
         });
       }
 
-      // Deposit actions
       if (type === "deposit") {
         url = `https://monoxapi.onrender.com/api/admin/deposits/${id}/${action}`;
-      } 
-      // Withdrawal actions
-      else if (type === "withdraw") {
+      } else if (type === "withdraw") {
         url = `https://monoxapi.onrender.com/api/admin/withdrawals/${id}/${action}`;
       }
 
       const res = await fetch(url, options);
-
       if (!res.ok) {
         console.error("HTTP error:", res.status);
         return alert(`Server returned ${res.status} (${res.statusText})`);
@@ -110,7 +109,7 @@ const AdminDashboard = () => {
     return (
       <span
         className={`px-2 py-1 rounded text-xs font-semibold ${
-          colors[status.toUpperCase()] || "bg-gray-200 text-gray-800"
+          colors[status?.toUpperCase()] || "bg-gray-200 text-gray-800"
         }`}
       >
         {status}
@@ -119,12 +118,29 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      <aside className="w-64 bg-yellow-400 text-white flex flex-col p-4">
-        <h2 className="text-2xl font-bold mb-6 text-center">Monox Admin</h2>
+    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+      {/* Sidebar for mobile */}
+      <div className="md:hidden bg-yellow-400 p-3 flex justify-between items-center text-white">
+        <h2 className="text-lg font-bold">Monox Admin</h2>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+          {sidebarOpen ? <FaTimesCircle size={22} /> : <FaBars size={22} />}
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed md:static top-0 left-0 h-full w-64 bg-yellow-400 text-white flex flex-col p-4 transition-transform duration-300 z-40
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      >
+        <h2 className="text-2xl font-bold mb-6 text-center hidden md:block">
+          Monox Admin
+        </h2>
         <nav className="space-y-3 flex-1">
           <button
-            onClick={() => setActiveTab("users")}
+            onClick={() => {
+              setActiveTab("users");
+              setSidebarOpen(false);
+            }}
             className={`w-full text-left py-2 px-4 rounded-lg ${
               activeTab === "users"
                 ? "bg-white text-yellow-500"
@@ -134,7 +150,10 @@ const AdminDashboard = () => {
             <FaUsers className="inline-block mr-2" /> Users
           </button>
           <button
-            onClick={() => setActiveTab("deposits")}
+            onClick={() => {
+              setActiveTab("deposits");
+              setSidebarOpen(false);
+            }}
             className={`w-full text-left py-2 px-4 rounded-lg ${
               activeTab === "deposits"
                 ? "bg-white text-yellow-500"
@@ -144,7 +163,10 @@ const AdminDashboard = () => {
             <FaMoneyBillWave className="inline-block mr-2" /> Deposits
           </button>
           <button
-            onClick={() => setActiveTab("withdrawals")}
+            onClick={() => {
+              setActiveTab("withdrawals");
+              setSidebarOpen(false);
+            }}
             className={`w-full text-left py-2 px-4 rounded-lg ${
               activeTab === "withdrawals"
                 ? "bg-white text-yellow-500"
@@ -162,79 +184,115 @@ const AdminDashboard = () => {
         </button>
       </aside>
 
-      <main className="flex-1 p-6">
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-6 mt-2 md:mt-0 overflow-x-auto">
         {loading ? (
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-gray-500 text-center">Loading...</p>
         ) : (
           <>
-            {/* Users Table */}
+            {/* Header */}
+            <div className="mb-5 flex justify-between items-center flex-wrap gap-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 capitalize">
+                {activeTab} Management
+              </h1>
+              <span className="text-sm text-gray-500">
+                {new Date().toLocaleString()}
+              </span>
+            </div>
+
+            {/* USERS TABLE */}
             {activeTab === "users" && (
-              <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-                <table className="min-w-full text-sm text-gray-700">
+              <div className="overflow-x-auto bg-white shadow-lg rounded-lg border border-gray-200">
+                <table className="min-w-full text-sm md:text-base text-gray-700">
                   <thead className="bg-gray-200">
                     <tr>
                       <th className="py-3 px-4 text-left">Name</th>
                       <th className="py-3 px-4 text-left">Email</th>
-                      <th className="py-3 px-4 text-left">Wallet Balance</th>
+                      <th className="py-3 px-4 text-left">Wallet</th>
                       <th className="py-3 px-4 text-left">Role</th>
-                      <th className="py-3 px-4 text-left">Wallet Action</th>
+                      <th className="py-3 px-4 text-left">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id} className="border-b hover:bg-gray-50">
-                        <td className="py-2 px-4">{user.username}</td>
-                        <td className="py-2 px-4">{user.email}</td>
-                        <td className="py-2 px-4">{user.wallet?.balance || 0} USD</td>
-                        <td className="py-2 px-4">{user.role}</td>
-                        <td className="py-2 px-4 flex gap-2 items-center">
-                          <input
-                            type="number"
-                            placeholder="Amount"
-                            value={walletAmount[user.id] || ""}
-                            onChange={(e) =>
-                              setWalletAmount({
-                                ...walletAmount,
-                                [user.id]: e.target.value,
-                              })
-                            }
-                            className="w-20 px-2 py-1 border rounded"
-                          />
-                          <button
-                            onClick={() => {
-                              const amount = parseFloat(walletAmount[user.id]);
-                              if (!amount || amount <= 0) return alert("Invalid amount");
-                              handleAction(user.id, "wallet", "topup", amount);
-                              setWalletAmount({ ...walletAmount, [user.id]: "" });
-                            }}
-                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center gap-1"
-                          >
-                            <FaPlus /> Top Up
-                          </button>
-                          <button
-                            onClick={() => {
-                              const amount = parseFloat(walletAmount[user.id]);
-                              if (!amount || amount <= 0) return alert("Invalid amount");
-                              if (amount > (user.wallet?.balance || 0)) return alert("Insufficient balance");
-                              handleAction(user.id, "wallet", "debit", amount);
-                              setWalletAmount({ ...walletAmount, [user.id]: "" });
-                            }}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded flex items-center gap-1"
-                          >
-                            <FaMinus /> Debit
-                          </button>
+                    {users.length > 0 ? (
+                      users.map((user) => (
+                        <tr
+                          key={user.id}
+                          className="border-b hover:bg-gray-50 transition"
+                        >
+                          <td className="py-2 px-4">{user.username}</td>
+                          <td className="py-2 px-4 break-all">{user.email}</td>
+                          <td className="py-2 px-4">
+                            {user.wallet?.balance || 0} USD
+                          </td>
+                          <td className="py-2 px-4">{user.role}</td>
+                          <td className="py-2 px-4 flex flex-wrap gap-2 items-center">
+                            <input
+                              type="number"
+                              placeholder="Amount"
+                              value={walletAmount[user.id] || ""}
+                              onChange={(e) =>
+                                setWalletAmount({
+                                  ...walletAmount,
+                                  [user.id]: e.target.value,
+                                })
+                              }
+                              className="w-20 px-2 py-1 border rounded text-sm"
+                            />
+                            <button
+                              onClick={() => {
+                                const amount = parseFloat(walletAmount[user.id]);
+                                if (!amount || amount <= 0)
+                                  return alert("Invalid amount");
+                                handleAction(user.id, "wallet", "topup", amount);
+                                setWalletAmount({
+                                  ...walletAmount,
+                                  [user.id]: "",
+                                });
+                              }}
+                              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center gap-1 text-sm"
+                            >
+                              <FaPlus /> Top Up
+                            </button>
+                            <button
+                              onClick={() => {
+                                const amount = parseFloat(walletAmount[user.id]);
+                                if (!amount || amount <= 0)
+                                  return alert("Invalid amount");
+                                if (amount > (user.wallet?.balance || 0))
+                                  return alert("Insufficient balance");
+                                handleAction(user.id, "wallet", "debit", amount);
+                                setWalletAmount({
+                                  ...walletAmount,
+                                  [user.id]: "",
+                                });
+                              }}
+                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded flex items-center gap-1 text-sm"
+                            >
+                              <FaMinus /> Debit
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="5"
+                          className="text-center text-gray-500 py-4"
+                        >
+                          No users found.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
             )}
 
-            {/* Deposits Table */}
+            {/* DEPOSITS TABLE */}
             {activeTab === "deposits" && (
-              <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-                <table className="min-w-full text-sm text-gray-700">
+              <div className="overflow-x-auto bg-white shadow-lg rounded-lg border border-gray-200">
+                <table className="min-w-full text-sm md:text-base text-gray-700">
                   <thead className="bg-gray-200">
                     <tr>
                       <th className="py-3 px-4 text-left">User</th>
@@ -244,40 +302,58 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {deposits.map((tx) => (
-                      <tr key={tx.id} className="border-b hover:bg-gray-50">
-                        <td className="py-2 px-4">{tx.user.username}</td>
-                        <td className="py-2 px-4">{tx.amount} USD</td>
-                        <td className="py-2 px-4">{statusBadge(tx.status)}</td>
-                        <td className="py-2 px-4 flex gap-2">
-                          {tx.status.toLowerCase() === "pending" && (
-                            <>
-                              <button
-                                onClick={() => handleAction(tx.id, "deposit", "approve")}
-                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
-                              >
-                                <FaCheck />
-                              </button>
-                              <button
-                                onClick={() => handleAction(tx.id, "deposit", "decline")}
-                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                              >
-                                <FaTimes />
-                              </button>
-                            </>
-                          )}
+                    {deposits.length > 0 ? (
+                      deposits.map((tx) => (
+                        <tr
+                          key={tx.id}
+                          className="border-b hover:bg-gray-50 transition"
+                        >
+                          <td className="py-2 px-4">{tx.user.username}</td>
+                          <td className="py-2 px-4">{tx.amount} USD</td>
+                          <td className="py-2 px-4">{statusBadge(tx.status)}</td>
+                          <td className="py-2 px-4 flex gap-2">
+                            {tx.status.toLowerCase() === "pending" && (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    handleAction(tx.id, "deposit", "approve")
+                                  }
+                                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                                >
+                                  <FaCheck />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleAction(tx.id, "deposit", "decline")
+                                  }
+                                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                                >
+                                  <FaTimes />
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="text-center text-gray-500 py-4"
+                        >
+                          No pending deposits.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
             )}
 
-            {/* Withdrawals Table */}
+            {/* WITHDRAWALS TABLE */}
             {activeTab === "withdrawals" && (
-              <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-                <table className="min-w-full text-sm text-gray-700">
+              <div className="overflow-x-auto bg-white shadow-lg rounded-lg border border-gray-200">
+                <table className="min-w-full text-sm md:text-base text-gray-700">
                   <thead className="bg-gray-200">
                     <tr>
                       <th className="py-3 px-4 text-left">User</th>
@@ -287,31 +363,49 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {withdrawals.map((tx) => (
-                      <tr key={tx.id} className="border-b hover:bg-gray-50">
-                        <td className="py-2 px-4">{tx.user.username}</td>
-                        <td className="py-2 px-4">{tx.amount} USD</td>
-                        <td className="py-2 px-4">{statusBadge(tx.status)}</td>
-                        <td className="py-2 px-4 flex gap-2">
-                          {tx.status.toLowerCase() === "pending" && (
-                            <>
-                              <button
-                                onClick={() => handleAction(tx.id, "withdraw", "approve")}
-                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
-                              >
-                                <FaCheck />
-                              </button>
-                              <button
-                                onClick={() => handleAction(tx.id, "withdraw", "decline")}
-                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                              >
-                                <FaTimes />
-                              </button>
-                            </>
-                          )}
+                    {withdrawals.length > 0 ? (
+                      withdrawals.map((tx) => (
+                        <tr
+                          key={tx.id}
+                          className="border-b hover:bg-gray-50 transition"
+                        >
+                          <td className="py-2 px-4">{tx.user.username}</td>
+                          <td className="py-2 px-4">{tx.amount} USD</td>
+                          <td className="py-2 px-4">{statusBadge(tx.status)}</td>
+                          <td className="py-2 px-4 flex gap-2">
+                            {tx.status.toLowerCase() === "pending" && (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    handleAction(tx.id, "withdraw", "approve")
+                                  }
+                                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                                >
+                                  <FaCheck />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleAction(tx.id, "withdraw", "decline")
+                                  }
+                                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                                >
+                                  <FaTimes />
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="text-center text-gray-500 py-4"
+                        >
+                          No pending withdrawals.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
