@@ -35,8 +35,8 @@ const AdminDashboard = () => {
         url = "https://monoxapi.onrender.com/api/admin/deposits/pending";
       if (activeTab === "withdrawals")
         url = "https://monoxapi.onrender.com/api/admin/withdrawals/pending";
-      if (activeTab === "investments")
-        url = "https://monoxapi.onrender.com/api/admin/investments/active";
+     if (activeTab === "investments") setInvestments(data.activeInvestments || []);
+
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
