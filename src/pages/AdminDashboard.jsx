@@ -35,8 +35,8 @@ const AdminDashboard = () => {
         url = "https://monoxapi.onrender.com/api/admin/deposits/pending";
       if (activeTab === "withdrawals")
         url = "https://monoxapi.onrender.com/api/admin/withdrawals/pending";
-     if (activeTab === "investments") setInvestments(data.activeInvestments || []);
-
+      if (activeTab === "investments")
+        url = "https://monoxapi.onrender.com/api/admin/investments/active";
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -46,7 +46,8 @@ const AdminDashboard = () => {
       if (activeTab === "users") setUsers(data.users || []);
       if (activeTab === "deposits") setDeposits(data.deposits || []);
       if (activeTab === "withdrawals") setWithdrawals(data.withdrawals || []);
-      if (activeTab === "investments") setInvestments(data.investments || []);
+      if (activeTab === "investments")
+        setInvestments(data.activeInvestments || []);
     } catch (err) {
       console.error(err);
       alert("Error fetching data.");
@@ -121,7 +122,6 @@ const AdminDashboard = () => {
     );
   };
 
-  // Calculate progress percentage for investments
   const calculateProgress = (startDate, endDate) => {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
@@ -133,7 +133,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
-      {/* Sidebar for mobile */}
       <div className="md:hidden bg-yellow-400 p-3 flex justify-between items-center text-white">
         <h2 className="text-lg font-bold">Monox Admin</h2>
         <button onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -141,7 +140,6 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      {/* Sidebar */}
       <aside
         className={`fixed md:static top-0 left-0 h-full w-64 bg-yellow-400 text-white flex flex-col p-4 transition-transform duration-300 z-40
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
@@ -211,13 +209,11 @@ const AdminDashboard = () => {
         </button>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-4 md:p-6 mt-2 md:mt-0 overflow-x-auto">
         {loading ? (
           <p className="text-gray-500 text-center">Loading...</p>
         ) : (
           <>
-            {/* Header */}
             <div className="mb-5 flex justify-between items-center flex-wrap gap-3">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800 capitalize">
                 {activeTab} Management
@@ -227,7 +223,6 @@ const AdminDashboard = () => {
               </span>
             </div>
 
-            {/* USERS TABLE */}
             {activeTab === "users" && (
               <div className="overflow-x-auto bg-white shadow-lg rounded-lg border border-gray-200">
                 <table className="min-w-full text-sm md:text-base text-gray-700">
@@ -316,7 +311,6 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* DEPOSITS TABLE */}
             {activeTab === "deposits" && (
               <div className="overflow-x-auto bg-white shadow-lg rounded-lg border border-gray-200">
                 <table className="min-w-full text-sm md:text-base text-gray-700">
@@ -377,7 +371,6 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* WITHDRAWALS TABLE */}
             {activeTab === "withdrawals" && (
               <div className="overflow-x-auto bg-white shadow-lg rounded-lg border border-gray-200">
                 <table className="min-w-full text-sm md:text-base text-gray-700">
@@ -438,7 +431,6 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {/* INVESTMENTS TABLE */}
             {activeTab === "investments" && (
               <div className="overflow-x-auto bg-white shadow-lg rounded-lg border border-gray-200">
                 <table className="min-w-full text-sm md:text-base text-gray-700">
