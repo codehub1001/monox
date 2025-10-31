@@ -18,6 +18,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [deposits, setDeposits] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
+  const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [walletAmount, setWalletAmount] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,6 +35,8 @@ const AdminDashboard = () => {
         url = "https://monoxapi.onrender.com/api/admin/deposits/pending";
       if (activeTab === "withdrawals")
         url = "https://monoxapi.onrender.com/api/admin/withdrawals/pending";
+      if (activeTab === "investments")
+        url = "https://monoxapi.onrender.com/api/admin/investments/active";
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -43,6 +46,7 @@ const AdminDashboard = () => {
       if (activeTab === "users") setUsers(data.users || []);
       if (activeTab === "deposits") setDeposits(data.deposits || []);
       if (activeTab === "withdrawals") setWithdrawals(data.withdrawals || []);
+      if (activeTab === "investments") setInvestments(data.investments || []);
     } catch (err) {
       console.error(err);
       alert("Error fetching data.");
@@ -174,6 +178,19 @@ const AdminDashboard = () => {
             }`}
           >
             <FaWallet className="inline-block mr-2" /> Withdrawals
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("investments");
+              setSidebarOpen(false);
+            }}
+            className={`w-full text-left py-2 px-4 rounded-lg ${
+              activeTab === "investments"
+                ? "bg-white text-yellow-500"
+                : "hover:bg-yellow-500/20"
+            }`}
+          >
+            <FaMoneyBillWave className="inline-block mr-2" /> Investments
           </button>
         </nav>
         <button
@@ -403,6 +420,45 @@ const AdminDashboard = () => {
                           className="text-center text-gray-500 py-4"
                         >
                           No pending withdrawals.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* INVESTMENTS TABLE */}
+            {activeTab === "investments" && (
+              <div className="overflow-x-auto bg-white shadow-lg rounded-lg border border-gray-200">
+                <table className="min-w-full text-sm md:text-base text-gray-700">
+                  <thead className="bg-gray-200">
+                    <tr>
+                      <th className="py-3 px-4 text-left">User</th>
+                      <th className="py-3 px-4 text-left">Plan</th>
+                      <th className="py-3 px-4 text-left">Invested Amount</th>
+                      <th className="py-3 px-4 text-left">Current Amount</th>
+                      <th className="py-3 px-4 text-left">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {investments.length > 0 ? (
+                      investments.map((inv) => (
+                        <tr
+                          key={inv.id}
+                          className="border-b hover:bg-gray-50 transition"
+                        >
+                          <td className="py-2 px-4">{inv.user?.username}</td>
+                          <td className="py-2 px-4">{inv.plan?.name}</td>
+                          <td className="py-2 px-4">{inv.investedAmount} USD</td>
+                          <td className="py-2 px-4">{inv.currentAmount} USD</td>
+                          <td className="py-2 px-4">{statusBadge(inv.status)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="text-center text-gray-500 py-4">
+                          No active investments.
                         </td>
                       </tr>
                     )}
