@@ -121,6 +121,16 @@ const AdminDashboard = () => {
     );
   };
 
+  // Calculate progress percentage for investments
+  const calculateProgress = (startDate, endDate) => {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const now = Date.now();
+    if (now >= end) return 100;
+    if (now <= start) return 0;
+    return Math.round(((now - start) / (end - start)) * 100);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
       {/* Sidebar for mobile */}
@@ -438,26 +448,49 @@ const AdminDashboard = () => {
                       <th className="py-3 px-4 text-left">Plan</th>
                       <th className="py-3 px-4 text-left">Invested Amount</th>
                       <th className="py-3 px-4 text-left">Current Amount</th>
+                      <th className="py-3 px-4 text-left">Profit</th>
+                      <th className="py-3 px-4 text-left">Progress</th>
                       <th className="py-3 px-4 text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {investments.length > 0 ? (
-                      investments.map((inv) => (
-                        <tr
-                          key={inv.id}
-                          className="border-b hover:bg-gray-50 transition"
-                        >
-                          <td className="py-2 px-4">{inv.user?.username}</td>
-                          <td className="py-2 px-4">{inv.plan?.name}</td>
-                          <td className="py-2 px-4">{inv.investedAmount} USD</td>
-                          <td className="py-2 px-4">{inv.currentAmount} USD</td>
-                          <td className="py-2 px-4">{statusBadge(inv.status)}</td>
-                        </tr>
-                      ))
+                      investments.map((inv) => {
+                        const profit = inv.currentAmount - inv.investedAmount;
+                        const progress = calculateProgress(
+                          inv.startDate,
+                          inv.endDate
+                        );
+                        return (
+                          <tr
+                            key={inv.id}
+                            className="border-b hover:bg-gray-50 transition"
+                          >
+                            <td className="py-2 px-4">{inv.user?.username}</td>
+                            <td className="py-2 px-4">{inv.plan?.name}</td>
+                            <td className="py-2 px-4">{inv.investedAmount} USD</td>
+                            <td className="py-2 px-4">{inv.currentAmount} USD</td>
+                            <td className="py-2 px-4">
+                              {profit.toFixed(2)} USD
+                            </td>
+                            <td className="py-2 px-4 w-48">
+                              <div className="bg-gray-200 rounded-full h-3 w-full">
+                                <div
+                                  className={`bg-green-500 h-3 rounded-full`}
+                                  style={{ width: `${progress}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                {progress}%
+                              </span>
+                            </td>
+                            <td className="py-2 px-4">{statusBadge(inv.status)}</td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td colSpan="5" className="text-center text-gray-500 py-4">
+                        <td colSpan="7" className="text-center text-gray-500 py-4">
                           No active investments.
                         </td>
                       </tr>
