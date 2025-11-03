@@ -473,7 +473,7 @@ const UserDashboard = () => {
                     </p>
 
                     <div className="bg-gray-100 rounded p-3 mb-4 font-mono text-sm break-all">
-                      {cryptoType === "BTC" && "bc1qxyzexamplebtcaddress123"}
+                      {cryptoType === "BTC" && "1AYBdde3YpdTj5Rs4WFUXEYegsh13vKsMZ"}
                       {cryptoType === "ETH" && "0xexampleethaddress456"}
                       {cryptoType === "USDT" && "TExampleusdtaddress789"}
                     </div>
