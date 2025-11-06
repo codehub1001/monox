@@ -32,8 +32,8 @@ const Footer = () => {
         {/* Contact Info */}
         <div className="space-y-3">
           <h3 className="text-xl font-semibold mb-4">Contact Us</h3>
-          <p className="flex items-center gap-2"><FaMapMarkerAlt className="text-yellow-500" /> 123 Monox Street, Lagos, Nigeria</p>
-          <p className="flex items-center gap-2"><FaPhone className="text-yellow-500" /> +234 901 234 5678</p>
+          <p className="flex items-center gap-2"><FaMapMarkerAlt className="text-yellow-500" /> 123 Monox Street</p>
+          <p className="flex items-center gap-2"><FaPhone className="text-yellow-500" /> </p>
           <p className="flex items-center gap-2"><FaEnvelope className="text-yellow-500" /> support@monoxtrades.com</p>
         </div>
       </div>
