@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/* Hide ugly Google toolbar */
+/* Hide ugly Google toolbar *//* ✅ Hide Google's default top banner */
 .goog-te-banner-frame.skiptranslate {
   display: none !important;
 }
@@ -7,24 +7,38 @@ body {
   top: 0px !important;
 }
 
-/* Remove default borders and spacing */
+/* ✅ Prevent Translate dropdown from hiding behind elements */
+.goog-te-menu-frame.skiptranslate {
+  z-index: 999999 !important;
+}
+
+/* ✅ Hide bottom spacing Google adds sometimes */
+body > .skiptranslate {
+  display: none !important;
+}
+
+/* ✅ Custom dark style for dropdown */
 #google_translate_element select {
-  background: #1f2937;
-  color: #facc15;
-  border: 1px solid #374151;
+  background: #1f2937; /* Tailwind gray-800 */
+  color: #facc15; /* Tailwind yellow-400 */
+  border: 1px solid #374151; /* Tailwind gray-700 */
   border-radius: 8px;
   padding: 6px 8px;
   font-size: 14px;
   outline: none;
   transition: all 0.3s ease;
+  appearance: none;
+  cursor: pointer;
 }
 
-#google_translate_element select:hover {
-  border-color: #fbbf24;
-  background: #111827;
+/* ✅ Hover & focus styles */
+#google_translate_element select:hover,
+#google_translate_element select:focus {
+  border-color: #fbbf24; /* Tailwind yellow-300 */
+  background: #111827; /* Tailwind gray-900 */
 }
 
-/* Smooth fade-in */
+/* ✅ Fade-in animation for smooth load */
 @keyframes fadeIn {
   from {
     opacity: 0;
