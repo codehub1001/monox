@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import Translator from './components/Translator'; // ✅ Import translator
 import Banner from './components/Banner';
 import About from './components/AboutSeection';
 import TradingSection from './components/Trading';
@@ -40,9 +41,8 @@ const Layout = ({ children }) => {
 
 const AppContent = () => {
   const location = useLocation();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = React.useState(true);
 
-  // Loader during route change
   useEffect(() => {
     setLoading(true);
     const timer = setTimeout(() => setLoading(false), 1200);
@@ -51,6 +51,9 @@ const AppContent = () => {
 
   return (
     <>
+      {/* ✅ Translator rendered here, outside any overflow-hidden container */}
+      <Translator />
+
       {loading && <Loader />}
       {!loading && (
         <Layout>
@@ -93,16 +96,14 @@ const AppContent = () => {
 
 const App = () => {
   useEffect(() => {
-    // Inject Tawk.to script once when app loads
     const s1 = document.createElement('script');
     s1.async = true;
-    s1.src = 'https://embed.tawk.to/690621314cdcfe19515ef3a6/1j8vv3apf'; // ✅ your real Tawk.to link
+    s1.src = 'https://embed.tawk.to/690621314cdcfe19515ef3a6/1j8vv3apf';
     s1.charset = 'UTF-8';
     s1.setAttribute('crossorigin', '*');
     document.body.appendChild(s1);
 
     return () => {
-      // Optional cleanup
       document.body.removeChild(s1);
     };
   }, []);
