@@ -1,35 +1,35 @@
-import React, { useEffect } from 'react';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Translator from './components/Translator'; // ✅ Import translator
-import Banner from './components/Banner';
-import About from './components/AboutSeection';
-import TradingSection from './components/Trading';
-import Services from './components/Services';
-import Subscribe from './components/Subscribe';
-import HowToGetStarted from './components/HowToGetStarted';
-import CoinSlider from './components/CoinSlider';
-import MirrorTrades from './pages/MirrorTrades';
-import Planing from './pages/Planing';
-import Contact from './pages/Contact';
-import AboutUS from './pages/AboutUS';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import CryptoTrading from './components/CryptoTrading';
-import CopyTrading from './components/CopyTrading';
-import ForexTrading from './components/ForexTrading';
-import FuturesTrading from './components/FuturesTrading';
-import StocksTrading from './components/StocksTrading';
-import IndicesTrading from './components/IndicesTrading';
-import UserDashboard from './pages/UserDashboard';
-import Profile from './components/Profile';
-import AdminDashboard from './pages/AdminDashboard';
-import Loader from './components/Loader';
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import Translator from "./components/Translator"; // ✅ Only one translator
+import Banner from "./components/Banner";
+import About from "./components/AboutSeection";
+import TradingSection from "./components/Trading";
+import Services from "./components/Services";
+import Subscribe from "./components/Subscribe";
+import HowToGetStarted from "./components/HowToGetStarted";
+import CoinSlider from "./components/CoinSlider";
+import MirrorTrades from "./pages/MirrorTrades";
+import Planing from "./pages/Planing";
+import Contact from "./pages/Contact";
+import AboutUS from "./pages/AboutUS";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import CryptoTrading from "./components/CryptoTrading";
+import CopyTrading from "./components/CopyTrading";
+import ForexTrading from "./components/ForexTrading";
+import FuturesTrading from "./components/FuturesTrading";
+import StocksTrading from "./components/StocksTrading";
+import IndicesTrading from "./components/IndicesTrading";
+import UserDashboard from "./pages/UserDashboard";
+import Profile from "./components/Profile";
+import AdminDashboard from "./pages/AdminDashboard";
+import Loader from "./components/Loader";
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const hideLayout = ['/userdashboard', '/admindashboard'];
+  const hideLayout = ["/userdashboard", "/admindashboard"];
   return (
     <>
       {!hideLayout.includes(location.pathname) && <Header />}
@@ -41,7 +41,7 @@ const Layout = ({ children }) => {
 
 const AppContent = () => {
   const location = useLocation();
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -51,10 +51,8 @@ const AppContent = () => {
 
   return (
     <>
-      {/* ✅ Translator rendered here, outside any overflow-hidden container */}
-      <Translator />
-
       {loading && <Loader />}
+
       {!loading && (
         <Layout>
           <Routes>
@@ -88,6 +86,9 @@ const AppContent = () => {
             <Route path="/admindashboard" element={<AdminDashboard />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
+
+          {/* Translator floating bottom-left like Tawk.to chat box */}
+          <Translator />
         </Layout>
       )}
     </>
@@ -96,16 +97,15 @@ const AppContent = () => {
 
 const App = () => {
   useEffect(() => {
-    const s1 = document.createElement('script');
+    // Tawk.to chat script
+    const s1 = document.createElement("script");
     s1.async = true;
-    s1.src = 'https://embed.tawk.to/690621314cdcfe19515ef3a6/1j8vv3apf';
-    s1.charset = 'UTF-8';
-    s1.setAttribute('crossorigin', '*');
+    s1.src = "https://embed.tawk.to/690621314cdcfe19515ef3a6/1j8vv3apf";
+    s1.charset = "UTF-8";
+    s1.setAttribute("crossorigin", "*");
     document.body.appendChild(s1);
 
-    return () => {
-      document.body.removeChild(s1);
-    };
+    return () => document.body.removeChild(s1);
   }, []);
 
   return (
