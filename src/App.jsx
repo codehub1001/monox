@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import Translator from "./components/Translator"; // ✅ Only one translator
+import Translator from "./components/Translator";
 import Banner from "./components/Banner";
 import About from "./components/AboutSeection";
 import TradingSection from "./components/Trading";
@@ -86,9 +86,6 @@ const AppContent = () => {
             <Route path="/admindashboard" element={<AdminDashboard />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
-
-          {/* Translator floating bottom-left like Tawk.to chat box */}
-          <Translator />
         </Layout>
       )}
     </>
@@ -111,6 +108,8 @@ const App = () => {
   return (
     <Router>
       <AppContent />
+      {/* ✅ Translator stays mounted globally, not re-rendered on route change */}
+      <Translator />
     </Router>
   );
 };
