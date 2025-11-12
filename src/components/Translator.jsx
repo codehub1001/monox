@@ -4,8 +4,8 @@ const Translator = () => {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    // Load Google Translate script once
-    if (!window.googleTranslateElementInit) {
+    // Avoid reloading script if it already exists
+    if (!document.getElementById("google-translate-script")) {
       window.googleTranslateElementInit = () => {
         new window.google.translate.TranslateElement(
           {
@@ -18,10 +18,23 @@ const Translator = () => {
       };
 
       const script = document.createElement("script");
+      script.id = "google-translate-script";
       script.src =
         "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
       script.async = true;
       document.body.appendChild(script);
+    } else if (window.google && window.google.translate) {
+      // Script already loaded, manually init if needed
+      if (!document.getElementById("google_translate_element").hasChildNodes()) {
+        new window.google.translate.TranslateElement(
+          {
+            pageLanguage: "en",
+            includedLanguages: "en,es,fr,de,it,pt,zh,ja,ar,ru",
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+          },
+          "google_translate_element"
+        );
+      }
     }
   }, []);
 
@@ -43,7 +56,6 @@ const Translator = () => {
       )}
 
       <style>{`
-        /* Customize dropdown select */
         .goog-te-gadget-simple {
           background-color: transparent !important;
         }
@@ -54,7 +66,6 @@ const Translator = () => {
           border-radius: 5px !important;
           border: 1px solid #374151 !important;
         }
-        /* Hide Google banner */
         .goog-te-banner-frame.skiptranslate {
           display: none !important;
         }
